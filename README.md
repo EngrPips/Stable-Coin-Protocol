@@ -12,11 +12,11 @@ Our stable coin would be pegged to a dollar (meaning we are making a pegged/anch
 
 # Stability Mechanism
 
-We would be making a stable coin that uses an algorithmic stability mechanism (meaning that the minting and burning of our stable coin is done purely by a smart contract without any intefrence whatsoever of human). Not to make sure our stability mechanism is truly algorithm we would have some implementation in our contract that enforce the fact that people can only mint our stable coin quantity that is below their provided collateral
+We would be making a stable coin that uses an algorithmic stability mechanism (meaning that the minting and burning of our stable coin is done purely by a smart contract without any intefrence whatsoever of human). Now to make sure our stability mechanism is truly algorithmic we would have some implementation in our contract that enforce the fact that people can only mint our stable coin quantity that is below their provided collateral
 
 # Collateral Type
 
-We would be using an exogenous collateral type for our stable coin (meaning that our collateral isn't controlled or issued by us). one more thing to notr is we are using a crypto asset as collateral.
+We would be using an exogenous collateral type for our stable coin (meaning that our collateral isn't controlled or issued by us). one more thing to note is we are using a crypto asset as collateral.
 
 We are using two crypto assets as our collateral which are ;
 
