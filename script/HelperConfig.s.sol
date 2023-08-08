@@ -19,10 +19,9 @@ contract HelperConfig is Script {
     int256 public constant WETH_PRICEFEED_INITIAL_ANSWER = 2000e8;
     int256 public constant WBTC_PRICEFEED_INITIAL_ANSWER = 4000e8;
 
-    uint256 public  DEFAULT_ANVIL_PRIVATE_KEY =
-        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+    uint256 public DEFAULT_ANVIL_PRIVATE_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 
-    NetworkConfig public  activeNetworkConfig;
+    NetworkConfig public activeNetworkConfig;
 
     constructor() {
         if (block.chainid == 11155111) {
@@ -33,7 +32,7 @@ contract HelperConfig is Script {
     }
 
     function getSepoliaConfig() public view returns (NetworkConfig memory sepoliaNetworkConfig) {
-        sepoliaNetworkConfig=  NetworkConfig({
+        sepoliaNetworkConfig = NetworkConfig({
             wethPriceFeedAddress: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
             wbtcPriceFeedAddress: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43,
             wethAddress: 0xdd13E55209Fd76AfE204dBda4007C227904f0a81,
@@ -56,7 +55,7 @@ contract HelperConfig is Script {
         ERC20Mock wbtcMock = new ERC20Mock();
         vm.stopBroadcast();
 
-        anvilNetworkConfig=  NetworkConfig({
+        anvilNetworkConfig = NetworkConfig({
             wethPriceFeedAddress: address(wethPriceFeed),
             wbtcPriceFeedAddress: address(wbtcPriceFeed),
             wethAddress: address(wethMock),
