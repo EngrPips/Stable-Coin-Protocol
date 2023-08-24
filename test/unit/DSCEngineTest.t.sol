@@ -38,6 +38,7 @@ contract DSCEngineTest is Test {
     uint256 private constant STARTING_BALANCE = 10 ether;
     uint256 private constant APPROPRIATE_DSC_MINT = 0.1 ether;
     uint256 private constant APPROPRIATE_DSC_BURN = 0.1 ether;
+    uint256 private constant PART_OF_TOTAL_COLLATERAL = 0.5 ether;
 
     function setUp() external {
         DeployDSC deployer = new DeployDSC();
@@ -175,7 +176,7 @@ contract DSCEngineTest is Test {
     ///DEPOSIT AND MINT TEST          ///
     ///////////////////////////////////
 
-    modifier DepositAndMintDSC(){
+    modifier DepositAndMintDSC() {
         vm.startPrank(user);
         ERC20Mock(wethAddress).approve(address(DSCE), COLLATERAL_AMOUNT);
         DSCE.depositCollateralAndMintDSC(COLLATERAL_AMOUNT, wethAddress, APPROPRIATE_DSC_MINT);
@@ -183,7 +184,7 @@ contract DSCEngineTest is Test {
         _;
     }
 
-    function testSuccessfullyDepositAndMintDSC() public DepositAndMintDSC{
+    function testSuccessfullyDepositAndMintDSC() public DepositAndMintDSC {
         assertEq(DSCE.getAmountOfDebtMintedByAUser(user), APPROPRIATE_DSC_MINT);
     }
 
@@ -191,15 +192,54 @@ contract DSCEngineTest is Test {
     /// BURN TEST          ///
     //////////////////////////
 
-    function testCanNotBurnZeroDSC() public DepositAndMintDSC{
+    function testCanNotBurnZeroDSC() public DepositAndMintDSC {
         vm.expectRevert(DSCEngine.DSCEngine__AmountNeedsToBeMoreThanZero.selector);
         DSCE.burnDSC(0);
     }
 
-    function testCanBurnDSC() public DepositAndMintDSC{
+    function testCanBurnDSC() public DepositAndMintDSC {
         vm.startPrank(user);
         (DSC).approve(address(DSCE), APPROPRIATE_DSC_BURN);
         DSCE.burnDSC(APPROPRIATE_DSC_BURN);
-        assertEq(DSCE.getAmountOfDebtMintedByAUser(user),0);
+        assertEq(DSCE.getAmountOfDebtMintedByAUser(user), 0);
     }
+
+    //////////////////////////
+    /// REDEEM TEST        ///
+    //////////////////////////
+
+    function testCanRedeemCollateralWithoutMintingDebt() public depositCollateral {
+        vm.startPrank(user);
+        ERC20Mock(wethAddress).approve(address(DSCE), COLLATERAL_AMOUNT);
+        DSCE.redeemCollateral(wethAddress, COLLATERAL_AMOUNT);
+        uint256 userCollateralBalance =
+            DSCE.getTotalCollateralDepositedByAUserOnAParticularCollateralToken(user, wethAddress);
+        assertEq(userCollateralBalance, 0);
+    }
+
+    function testCanRedeemSomeAmountOfYourCollateral() public depositCollateral {
+        vm.startPrank(user);
+        // ERC20Mock(wethAddress).approve(address(DSCE), PART_OF_TOTAL_COLLATERAL);
+        DSCE.redeemCollateral(wethAddress, PART_OF_TOTAL_COLLATERAL);
+        uint256 userCollateralBalance =
+            DSCE.getTotalCollateralDepositedByAUserOnAParticularCollateralToken(user, wethAddress);
+        assertEq(userCollateralBalance, 0.5 ether);
+    }
+
+    function testCannotRedeemZeroAmountOfCollateral() public depositCollateral {
+        vm.expectRevert(DSCEngine.DSCEngine__AmountNeedsToBeMoreThanZero.selector);
+        DSCE.redeemCollateral(wethAddress, 0);
+    }
+
+    function testCanReedemCollateralForDSC() public DepositAndMintDSC {
+        vm.startPrank(user);
+        DSC.approve(address(DSCE), APPROPRIATE_DSC_MINT);
+        DSCE.redeemCollateralForDSC(wethAddress, APPROPRIATE_DSC_MINT);
+        uint256 userDebtAmount = DSCE.getAmountOfDebtMintedByAUser(user);
+        assertEq(userDebtAmount, 0);
+    }
+
+    //////////////////////////
+    /// LIQUIDATION TEST   ///
+    //////////////////////////
 }

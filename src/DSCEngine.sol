@@ -151,7 +151,7 @@ contract DSCEngine is ReentrancyGuard {
         if (!minted) revert DSCEngine__MintingFailed();
     }
 
-    function burnDSC(uint256 _amountOfDSCToBurn) public{
+    function burnDSC(uint256 _amountOfDSCToBurn) public {
         _burnDSC(msg.sender, msg.sender, _amountOfDSCToBurn);
     }
 
@@ -162,6 +162,18 @@ contract DSCEngine is ReentrancyGuard {
     ) public {
         depositCollateral(_collateralTokenAddress, _collateralAmount);
         mintDSC(_amountOfDSCToMint);
+    }
+
+    function _burnDSC(address _burner, address _onBehalfOf, uint256 _amountOFDSCToBurn)
+        private
+        moreThanZero(_amountOFDSCToBurn)
+        nonReentrant
+    {
+        s_userToTheAmountOfDSCMinted[_onBehalfOf] -= _amountOFDSCToBurn;
+        bool transfered = i_DSC.transferFrom(_burner, address(this), _amountOFDSCToBurn);
+        if (!transfered) revert DSCEngine__TransferFailed();
+        i_DSC.burn(_amountOFDSCToBurn);
+        emit DSCBurnt(_burner, _onBehalfOf, _amountOFDSCToBurn);
     }
 
     function _redeemCollateral(
@@ -177,22 +189,9 @@ contract DSCEngine is ReentrancyGuard {
         emit CollateralTransfered(_collateralTokenAddress, _redeemer, _onBehalfOf, _amountToRedeem);
     }
 
-    function _burnDSC(address _burner, address _onBehalfOf, uint256 _amountOFDSCToBurn)
-        private
-        moreThanZero(_amountOFDSCToBurn)
-        nonReentrant
-    {
-        s_userToTheAmountOfDSCMinted[_onBehalfOf] -= _amountOFDSCToBurn;
-        bool transfered = i_DSC.transferFrom(_burner, address(this), _amountOFDSCToBurn);
-        if (!transfered) revert DSCEngine__TransferFailed();
-        i_DSC.burn(_amountOFDSCToBurn);
-        emit DSCBurnt(_burner, _onBehalfOf, _amountOFDSCToBurn);
-    }
-
     function redeemCollateralForDSC(address _collateralTokenAddress, uint256 _amountOfDSCToBurn)
         public
         moreThanZero(_amountOfDSCToBurn)
-        nonReentrant
         onlySupportedTokenAddress(_collateralTokenAddress)
     {
         _burnDSC(msg.sender, msg.sender, _amountOfDSCToBurn);
@@ -200,6 +199,10 @@ contract DSCEngine is ReentrancyGuard {
             convertDSCToCollateralEquivalent(_collateralTokenAddress, _amountOfDSCToBurn);
         _redeemCollateral(msg.sender, msg.sender, _collateralTokenAddress, equivalentCollateralAmount);
         _revertIfhealthFactorIsBroken(msg.sender);
+    }
+
+    function redeemCollateral(address _collateralAddress, uint256 _amountToRedeem) public {
+        _redeemCollateral(msg.sender, msg.sender, _collateralAddress, _amountToRedeem);
     }
 
     function liquidate(address _liquidatee, address _collateralTokenToLiquidate, uint256 _amountToLiquidate)
